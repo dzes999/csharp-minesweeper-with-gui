@@ -1,0 +1,18 @@
+﻿<Page x:Class="minesweeper.Options"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:minesweeper"
+      mc:Ignorable="d" 
+      WindowWidth="300" WindowHeight="260"
+      Title="Options">
+
+    <StackPanel>
+        <Label x:Name="LB_Difficulty" Content="Set Difficulty" Width="120" Margin="0 30 0 0" HorizontalContentAlignment="Center"/>
+        <Button x:Name="Easy" Click="Easy_Click" Content="Easy" Width="120" Margin="0 10 0 0"/>
+        <Button x:Name="Normal" Click="Normal_Click" Content="Normal" Width="120" Margin="0 5 0 0"/>
+        <Button x:Name="Hard" Click="Hard_Click" Content="Hard" Width="120" Margin="0 5 0 0"/>
+        <Button x:Name="BT_Back" Click="BT_Back_Click" Content="Back" Width="120" Margin="0 20 0 0"/>
+    </StackPanel>
+</Page>
