@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +18,22 @@ namespace minesweeper
 {
     public partial class Game : Page
     {
-        Button[] buttons;
-        Style style;
-        Style style2;
-        Style bomb;
-        Style bt_flag;
-        Style smile;
+        DispatcherTimer dt = new DispatcherTimer();
+        Label lb_flagCounter = new Label();
+        Label lb_timer = new Label();
+        Button[] tiles;
+        Button bt_reset;
+        Style? st_reset1;
+        Style? st_reset2;
+        Style? st_reset3;
+        Style? st_reset4;
+        Style? st_logo;
+        Style? st_bt1;
+        Style? st_bt2;
+        Style? st_bomb;
+        Style? st_flag;
+        Style? st_exit;
+        Style? st_options;
 
         // dxd = difficulty * difficulty \\
         int difficulty;
@@ -38,33 +48,55 @@ namespace minesweeper
         }
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
+            //timer
+            dt.Interval = TimeSpan.FromSeconds(1);
+            dt.Tick += Ticker;
+
+            //styles for buttons
+            st_options = FindResource("BT_Options") as Style;
+            st_reset1 = FindResource("BT_Reset1") as Style;
+            st_reset2 = FindResource("BT_Reset2") as Style;
+            st_reset3 = FindResource("BT_Reset3") as Style;
+            st_reset4 = FindResource("BT_Reset4") as Style;
+            st_bomb = FindResource("BT_Bomb") as Style;
+            st_flag = FindResource("BT_Flag") as Style;
+            st_exit = FindResource("BT_Exit") as Style;
+            st_logo = FindResource("Logo") as Style;
+            st_bt1 = FindResource("BT_Looks") as Style;
+            st_bt2 = FindResource("BT_Looks2") as Style;
+
+            //game start
             CreateBoard();
+        }
+
+        private int increment = 0;
+
+        private void Ticker(object sender, EventArgs e)
+        {
+            increment++;
+
+            lb_timer.Content = increment.ToString();
         }
         public void CreateBoard()
         {
-            style = this.FindResource("BT_Looks") as Style;
-            style2 = this.FindResource("BT_Looks2") as Style;
-            bomb = this.FindResource("BT_Bomb") as Style;
-            bt_flag = this.FindResource("BT_Flag") as Style;
-            smile = this.FindResource("BT_Smile") as Style;
-            //difficulty
-            difficulty = Convert.ToInt32(System.IO.File.ReadAllText(@"C:\Users\grzes\Desktop\all\programs\minesweeper - final edition\minesweeper\TextFile1.txt").Split(" ")[1]);
-            dxd = difficulty * difficulty;
-            //buttons array
-            buttons = new Button[dxd];
-
             //grid
             Grid board = new Grid();
 
+            //difficulty
+            difficulty = Convert.ToInt32(System.IO.File.ReadAllText("../../../TextFile1.txt").Split(" ")[1]);
+            dxd = difficulty * difficulty;
+
             //buttons
+            tiles = new Button[dxd];
+
             for (int i = 0; i < dxd; i++)
             {
-                buttons[i] = new Button();
-                buttons[i].MouseRightButtonDown += rightclick;
-                buttons[i].Click += default_click;
-                buttons[i].Name = "BT_0";
-                buttons[i].Tag = i;
-                buttons[i].Style = style;
+                tiles[i] = new Button();
+                tiles[i].MouseRightButtonDown += rightclick;
+                tiles[i].Click += default_click;
+                tiles[i].Name = "BT_0";
+                tiles[i].Tag = i;
+                tiles[i].Style = st_bt1;
             }
 
             //creating rows and columns
@@ -76,184 +108,15 @@ namespace minesweeper
                 //setting buttons
                 for (int j = 0; j < difficulty; j++)
                 {
-                    Grid.SetRow(buttons[j + (i * difficulty)], i);
-                    Grid.SetColumn(buttons[j + (i * difficulty)], j);
-                    board.Children.Add(buttons[j + (i * difficulty)]);
+                    Grid.SetRow(tiles[j + (i * difficulty)], i);
+                    Grid.SetColumn(tiles[j + (i * difficulty)], j);
+                    board.Children.Add(tiles[j + (i * difficulty)]);
                 }
             }
 
             checkboard();
 
-            //board alignment
-            board.HorizontalAlignment = HorizontalAlignment.Center;
-            board.VerticalAlignment = VerticalAlignment.Center;
-
-            //creating a stack panel to add a button
-            StackPanel stackPanel = new StackPanel();
-            StackPanel stackPanel2 = new StackPanel();
-            stackPanel2.Orientation = Orientation.Horizontal;
-            stackPanel2.HorizontalAlignment = HorizontalAlignment.Center;
-            stackPanel.Children.Add(stackPanel2);
-            stackPanel.Children.Add(board);
-
-            //developer button
-            Button devBT = new Button();
-            devBT.Height = 60;
-            devBT.Width = 60;
-            devBT.Content = "dev tool";
-            devBT.Click += developer_tool;
-
-            //restart button
-            Button restart = new Button();
-            restart.Height = 60;
-            restart.Width = 60;
-            restart.Content = "exit";
-            restart.Click += restart_button;
-            restart.Style = smile;
-
-            //exit button
-            Button exitBT = new Button();
-            exitBT.Height = 60;
-            exitBT.Width = 60;
-            exitBT.Content = "exit";
-            exitBT.Click += exit_button;
-
-            //label
-            Label timer = new Label();
-            timer.Height = 60;
-            timer.Width = 60;
-            timer.FontSize = 12;
-            timer.VerticalContentAlignment = VerticalAlignment.Center;
-            timer.HorizontalContentAlignment = HorizontalAlignment.Center;
-            timer.Content = "timer";
-
-            //label
-            Label timer2 = new Label();
-            timer2.Height = 60;
-            timer2.Width = 60;
-            timer2.FontSize = 12;
-            timer2.VerticalContentAlignment = VerticalAlignment.Center;
-            timer2.HorizontalContentAlignment = HorizontalAlignment.Center;
-            timer2.Content = "10";
-
-            stackPanel2.Children.Add(exitBT);
-            stackPanel2.Children.Add(timer2);
-            stackPanel2.Children.Add(restart);
-            stackPanel2.Children.Add(timer);
-            stackPanel2.Children.Add(devBT);
-
-            //applying the stackpanel content
-            this.Content = stackPanel;
-        }
-        private void default_click(object sender, RoutedEventArgs e)
-        {
-            if (!firstclick)
-            {
-                if (((Button)sender).Tag != "boom")
-                {
-                    floodfill(sender);
-                    win();
-                }
-                else
-                {
-                    bombClick(sender);
-                }
-            }
-            else
-            {
-                MinesLogic();
-                floodfill(sender);
-                firstclick = false;
-            }
-        }
-        private void floodfill(object sender)
-        {
-            int k = 0;
-            int h = 0;
-            for (int i = 0; i < dxd; i++)
-            {
-                if (buttons[i].Tag == ((Button)sender).Tag)
-                {
-                    k = i;
-                }
-            }
-
-            List<Button> list = new List<Button>();
-            list.Add(buttons[k]);
-
-            while (list.Count() > 0)
-            {
-                
-                for (int i = 0; i < dxd; i++)
-                {
-                    if (buttons[i] == list.Last())
-                    {
-                        h = i;
-                    }
-                }
-
-                list.Remove(list.Last());
-
-                if (buttons[h].IsEnabled && buttons[h].Tag != "boom" && buttons[h].Name.Split("_")[1] == "0")
-                {
-                    buttons[h].IsEnabled = false;
-                    //right
-                    if (h % difficulty < difficulty - 1)
-                    {
-                        list.Add(buttons[h + 1]);
-                    }
-                    //left
-                    if (h % difficulty > 0)
-                    {
-                        list.Add(buttons[h - 1]);
-                    }
-                    //down
-                    if (h < dxd - difficulty)
-                    {
-                        list.Add(buttons[h + difficulty]);
-                    }
-                    //up
-                    if (h > difficulty)
-                    {
-                        list.Add(buttons[h - difficulty]);
-                    }
-                }
-                else
-                {
-                    buttons[h].IsEnabled = false;
-                    if (buttons[h].Name.Split("_")[1] != "0")
-                    {
-                        buttons[h].Content = buttons[h].Name.Split("_")[1];
-                    }
-                }
-            }
-            firstclick = false;
-        }
-
-        /*private void ffExtension(int x)
-        {
-            Button[] ext = {
-            //upper left
-            buttons[x - (difficulty + 1)],
-            //upper right
-            buttons[x - (difficulty - 1)],
-            //bottom left
-            buttons[x + (difficulty - 1)],
-            //bottom right
-            buttons[x + (difficulty + 1)]};
-
-            for (int i = 0; i < ext.Length -1; i++)
-            {
-                ext[i].IsEnabled = false;
-                ext[i].Content = ext[i].Name.Split("_")[1];
-            }
-        }*/
-        public void MinesLogic()
-        {
-            //creating and setting mines
-
-            int mines;
-
+            //bomb count for flag counter
             if (difficulty == 16)
             {
                 bombCount = 2;
@@ -263,12 +126,181 @@ namespace minesweeper
                 bombCount = 4;
             }
 
+            int bombs = bombCount * difficulty;
+
+            //board alignment
+            board.HorizontalAlignment = HorizontalAlignment.Center;
+            board.VerticalAlignment = VerticalAlignment.Center;
+
+            //creating a stack panel to add a button
+            StackPanel stackPanel1 = new StackPanel();
+            StackPanel stackPanel2 = new StackPanel();
+            StackPanel LogoStackPanel = new StackPanel();
+
+            //logo
+            Button bt_logo = new Button();
+            bt_logo.Style = st_logo;
+
+            stackPanel2.Orientation = Orientation.Horizontal;
+            stackPanel2.HorizontalAlignment = HorizontalAlignment.Center;
+            LogoStackPanel.Orientation = Orientation.Vertical;
+            LogoStackPanel.Children.Add(bt_logo);
+            stackPanel1.Children.Add(stackPanel2);
+            stackPanel1.Children.Add(board);
+            stackPanel1.Children.Add(LogoStackPanel);
+
+            //developer button
+            Button bt_options = new Button();
+            bt_options.Height = 50;
+            bt_options.Width = 50;
+            bt_options.Click += developer_tool;
+            bt_options.Style = st_options;
+
+            //restart button
+            bt_reset = new Button();
+            bt_reset.Height = 60;
+            bt_reset.Width = 60;
+            bt_reset.Click += restart_button;
+            bt_reset.Style = st_reset1;
+
+            //exit button
+            Button bt_exit = new Button();
+            bt_exit.Height = 50;
+            bt_exit.Width = 50;
+            bt_exit.Click += exit_button;
+            bt_exit.Style = st_exit;
+
+            //label
+            lb_timer.Height = 50;
+            lb_timer.Width = 50;
+            lb_timer.FontSize = 12;
+            lb_timer.VerticalContentAlignment = VerticalAlignment.Center;
+            lb_timer.HorizontalContentAlignment = HorizontalAlignment.Center;
+            lb_timer.Foreground = new SolidColorBrush(Colors.White);
+            lb_timer.Content = 0;
+
+            //label
+            lb_flagCounter.Height = 50;
+            lb_flagCounter.Width = 50;
+            lb_flagCounter.FontSize = 12;
+            lb_flagCounter.VerticalContentAlignment = VerticalAlignment.Center;
+            lb_flagCounter.HorizontalContentAlignment = HorizontalAlignment.Center;
+            lb_flagCounter.Foreground = new SolidColorBrush(Colors.White);
+            lb_flagCounter.Content = bombs;
+
+            stackPanel2.Children.Add(lb_flagCounter);
+            stackPanel2.Children.Add(bt_exit);
+            stackPanel2.Children.Add(bt_reset);
+            stackPanel2.Children.Add(bt_options);
+            stackPanel2.Children.Add(lb_timer);
+
+            //applying the stackpanel content
+            this.Content = stackPanel1;
+        }
+        private void default_click(object sender, RoutedEventArgs e)
+        {
+            if (((Button)sender).Style != st_flag)
+            {
+                if (!firstclick)
+                {
+                    if (((Button)sender).Tag != "boom")
+                    {
+                        floodfill(sender);
+                        win();
+                    }
+                    else
+                    {
+                        bombClick(sender);
+                    }
+                }
+                else
+                {
+                    MinesLogic();
+                    floodfill(sender);
+                    dt.Start();
+                    firstclick = false;
+                }
+            }
+        }
+        private void floodfill(object sender)
+        {
+            int k = 0;
+            int h = 0;
+            for (int i = 0; i < dxd; i++)
+            {
+                if (tiles[i].Tag == ((Button)sender).Tag)
+                {
+                    k = i;
+                }
+            }
+
+            List<Button> list = new List<Button>();
+            list.Add(tiles[k]);
+
+            while (list.Count() > 0)
+            {
+                
+                for (int i = 0; i < dxd; i++)
+                {
+                    if (tiles[i] == list.Last())
+                    {
+                        h = i;
+                    }
+                }
+
+                list.Remove(list.Last());
+
+                if (tiles[h].IsEnabled && tiles[h].Tag != "boom" && tiles[h].Name.Split("_")[1] == "0")
+                {
+                    if (tiles[h].Style != st_flag)
+                    {
+                        tiles[h].IsEnabled = false;
+                    }
+
+                    //right
+                    if (h % difficulty < difficulty - 1)
+                    {
+                        list.Add(tiles[h + 1]);
+                    }
+                    //left
+                    if (h % difficulty > 0)
+                    {
+                        list.Add(tiles[h - 1]);
+                    }
+                    //down
+                    if (h < dxd - difficulty)
+                    {
+                        list.Add(tiles[h + difficulty]);
+                    }
+                    //up
+                    if (h > difficulty)
+                    {
+                        list.Add(tiles[h - difficulty]);
+                    }
+                }
+                else
+                {
+                    tiles[h].IsEnabled = false;
+                    if (tiles[h].Name.Split("_")[1] != "0")
+                    {
+                        tiles[h].Content = tiles[h].Name.Split("_")[1];
+                    }
+                }
+            }
+            firstclick = false;
+        }
+        public void MinesLogic()
+        {
+            //creating and setting mines
+
+            int mines;
+
             for (int i = 0; i < bombCount * difficulty; i++)
             {
                 Random rnd = new Random();
                 mines = rnd.Next(1, dxd);
 
-                if (buttons[mines].Tag == "boom")
+                if (tiles[mines].Tag == "boom")
                 {
                     i--;
                     continue;
@@ -281,72 +313,73 @@ namespace minesweeper
                 //left
                 if (mines % difficulty > 0)
                 {
-                    help = Convert.ToInt32(buttons[mines - 1].Name.Split("_")[1]) + 1;
+                    help = Convert.ToInt32(tiles[mines - 1].Name.Split("_")[1]) + 1;
                     /*help++;*/
-                    buttons[mines - 1].Name = Convert.ToString("BT_" + help);
+                    tiles[mines - 1].Name = Convert.ToString("BT_" + help);
                 }
                 //right
                 if (mines % difficulty < difficulty - 1)
                 {
-                    help = Convert.ToInt32(buttons[mines + 1].Name.Split("_")[1]) + 1;
-                    buttons[mines + 1].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines + 1].Name.Split("_")[1]) + 1;
+                    tiles[mines + 1].Name = Convert.ToString("BT_" + help);
                 }
                 //down
                 if (mines < ((dxd) - difficulty))
                 {
-                    help = Convert.ToInt32(buttons[mines + difficulty].Name.Split("_")[1]) + 1;
-                    buttons[mines + difficulty].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines + difficulty].Name.Split("_")[1]) + 1;
+                    tiles[mines + difficulty].Name = Convert.ToString("BT_" + help);
                 }
                 //up
                 if (mines >= difficulty)
                 {
-                    help = Convert.ToInt32(buttons[mines - difficulty].Name.Split("_")[1]) + 1;
-                    buttons[mines - difficulty].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines - difficulty].Name.Split("_")[1]) + 1;
+                    tiles[mines - difficulty].Name = Convert.ToString("BT_" + help);
                 }
                 //bottom left
                 if (mines < dxd - difficulty && mines % difficulty != 0)
                 {
-                    help = Convert.ToInt32(buttons[mines + (difficulty - 1)].Name.Split("_")[1]) + 1;
-                    buttons[mines + (difficulty - 1)].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines + (difficulty - 1)].Name.Split("_")[1]) + 1;
+                    tiles[mines + (difficulty - 1)].Name = Convert.ToString("BT_" + help);
                 }
                 //upper right
                 if (mines >= difficulty && mines % difficulty != difficulty - 1)
                 {
-                    help = Convert.ToInt32(buttons[mines - (difficulty - 1)].Name.Split("_")[1]) + 1;
-                    buttons[mines - (difficulty - 1)].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines - (difficulty - 1)].Name.Split("_")[1]) + 1;
+                    tiles[mines - (difficulty - 1)].Name = Convert.ToString("BT_" + help);
                 }
                 //bottom right
                 if (mines % difficulty != difficulty - 1 && mines < dxd - difficulty)
                 {
-                    help = Convert.ToInt32(buttons[mines + (difficulty + 1)].Name.Split("_")[1]) + 1;
-                    buttons[mines + (difficulty + 1)].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines + (difficulty + 1)].Name.Split("_")[1]) + 1;
+                    tiles[mines + (difficulty + 1)].Name = Convert.ToString("BT_" + help);
                 }
                 //upper left
                 if (mines > difficulty && mines % difficulty != 0)
                 {
-                    help = Convert.ToInt32(buttons[mines - (difficulty + 1)].Name.Split("_")[1]) + 1;
-                    buttons[mines - (difficulty + 1)].Name = Convert.ToString("BT_" + help);
+                    help = Convert.ToInt32(tiles[mines - (difficulty + 1)].Name.Split("_")[1]) + 1;
+                    tiles[mines - (difficulty + 1)].Name = Convert.ToString("BT_" + help);
                 }
-                buttons[mines].Tag = "boom";
+                tiles[mines].Tag = "boom";
             }
         }
         private void zero(int x, string n)
         {
             if (n.Split("_")[1] != "0")
             {
-                buttons[x].Content = n.Split("_")[1];
+                tiles[x].Content = n.Split("_")[1];
             }
         }
         private void disableAllButtons()
         {
             for (int i = 0; i < dxd; i++)
             {
-                buttons[i].IsEnabled = false;
+                tiles[i].IsEnabled = false;
             }
         }
         private void bombClick(object sender)
         {
             showbombs();
+            bt_reset.Style = st_reset4;
             MessageBox.Show("you lost");
             disableAllButtons();
         }
@@ -356,13 +389,16 @@ namespace minesweeper
             int bombs = bombCount * difficulty;
             for (int i = 0; i < dxd; i++)
             {
-                if (buttons[i].IsEnabled == false)
+                if (tiles[i].IsEnabled == false)
                 {
                     counter++;
                 }
                 if (dxd - bombs <= counter)
                 {
-                    MessageBox.Show("you won");
+                    bt_reset.Style = st_reset3;
+                    dt.Stop();
+                    string time = lb_timer.Content.ToString();
+                    MessageBox.Show("Congratulations!" + "\n Your time is: " + time);
                     disableAllButtons();
                 }
             }
@@ -370,30 +406,37 @@ namespace minesweeper
         //flags not working
         private void rightclick(object sender, RoutedEventArgs e)
         {
-            if (((Button)sender).Style == bt_flag)
+            int x = Convert.ToInt32(lb_flagCounter.Content);
+            if (((Button)sender).Style == st_flag)
             {
                 if (((Button)sender).Content == " ")
                 {
-                    ((Button)sender).Style = style2;
+                    ((Button)sender).Style = st_bt2;
                 }
                 else
                 {
-                    ((Button)sender).Style = style;
+                    ((Button)sender).Style = st_bt1;
                 }
+                x += 1;
             }
             else
             {
-                ((Button)sender).Style = bt_flag;
+                if (x > 0)
+                {
+                    ((Button)sender).Style = st_flag;
+                    x -= 1;
+                }
             }
+            lb_flagCounter.Content = x;
         }
 
         private void showbombs()
         {
             for (int i = 0; i < dxd; i++)
             {
-                if (buttons[i].Tag == "boom")
+                if (tiles[i].Tag == "boom")
                 {
-                    buttons[i].Style = bomb;
+                    tiles[i].Style = st_bomb;
                 }
             }
         }
@@ -403,22 +446,14 @@ namespace minesweeper
             for (int i = 0; i < dxd; i++)
             {
 
-                if (buttons[i].Tag == "boom")
+                if (tiles[i].Tag == "boom")
                 {
-                    buttons[i].Style = bomb;
+                    tiles[i].Style = st_bomb;
                 }
                 else
                 {
-                    buttons[i].Content = buttons[i].Name.Split("_")[1];
+                    tiles[i].Content = tiles[i].Name.Split("_")[1];
                 }
-                /*if (buttons[i].Name.Split("_")[1] == "0" && buttons[i].Tag != "boom")
-                {
-                    buttons[i].Content = 0;
-                }
-                else
-                {
-                    buttons[i].Content = "";
-                }*/
             }
         }
         private void exit_button(object sender, RoutedEventArgs e)
@@ -428,35 +463,6 @@ namespace minesweeper
         }
         private void restart_button(object sender, RoutedEventArgs e)
         {
-            /*int counter = 0;
-            bool flag = true;
-            for (int i = 0; i < dxd; i++)
-            {
-                buttons[i].IsEnabled = true;
-                buttons[i].Name = "BT_0";
-                buttons[i].Tag = i;
-                buttons[i].Content = "";
-                buttons[i].Style = style;
-                firstclick = true;
-                if (i % difficulty == 0 && i != 0)
-                {
-                    flag ^= true;
-                    if (flag)
-                    {
-                        counter = 0;
-                    }
-                    else
-                    {
-                        counter = 1;
-                    }
-                }
-                if (counter % 2 == 0)
-                {
-                    buttons[i].Style = style2;
-                }
-                counter++;
-            }
-            checkboard();*/
             Game game = new Game();
             ((MainWindow)Application.Current.MainWindow).Content = game;
         }
@@ -482,8 +488,8 @@ namespace minesweeper
                 }
                 if (counter % 2 == 0)
                 {
-                    buttons[i].Style = style2;
-                    buttons[i].Content = " ";
+                    tiles[i].Style = st_bt2;
+                    tiles[i].Content = " ";
                 }
                 counter++;
             }
