@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,27 +25,27 @@ namespace minesweeper
         {
             MainMenu mainMenu = new MainMenu();
 
-            mainMenu.Label_Difficulty.Content = "Difficulty is set to: easy";
+            mainMenu.Label_Difficulty.Content = "The difficulty is set to easy";
             ((MainWindow)Application.Current.MainWindow).Content = mainMenu;
-            File.WriteAllText(@"C:\Users\grzes\Desktop\all\programs\minesweeper - final edition\minesweeper\TextFile1.txt", "difficulty: 8");    
+            File.WriteAllText("../../../TextFile1.txt", "difficulty: 8");    
         }
 
         private void Normal_Click(object sender, RoutedEventArgs e)
         {
             MainMenu mainMenu = new MainMenu();
 
-            mainMenu.Label_Difficulty.Content = "Difficulty is set to: normal";
+            mainMenu.Label_Difficulty.Content = "The difficulty is set to normal";
             ((MainWindow)Application.Current.MainWindow).Content = mainMenu;
-            File.WriteAllText(@"C:\Users\grzes\Desktop\all\programs\minesweeper - final edition\minesweeper\TextFile1.txt", "difficulty: 16");
+            File.WriteAllText("../../../TextFile1.txt", "difficulty: 16");
         }
 
         private void Hard_Click(object sender, RoutedEventArgs e)
         {
             MainMenu mainMenu = new MainMenu();
 
-            mainMenu.Label_Difficulty.Content = "Difficulty is set to: hard";
+            mainMenu.Label_Difficulty.Content = "The difficulty is set to hard";
             ((MainWindow)Application.Current.MainWindow).Content = mainMenu;
-            File.WriteAllText(@"C:\Users\grzes\Desktop\all\programs\minesweeper - final edition\minesweeper\TextFile1.txt", "difficulty: 24");
+            File.WriteAllText("../../../TextFile1.txt", "difficulty: 24");
         }
        
         
